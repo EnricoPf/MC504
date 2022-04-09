@@ -38,16 +38,6 @@ void *function1(void *entry)
      return (void *)0;
 }
 
-void *check_for_hit(char_block *cur)
-{
-     if (cur->status == 'C')
-     {
-          answer_pos[cur->id] = '@';
-          return;
-     }
-     return;
-}
-
 int main()
 {
 
@@ -86,6 +76,7 @@ int main()
           if ((8 - *attempts) == 0)
           {
                mode = 'f';
+               break;
           }
           char tried[5];
           printf("\n");
@@ -112,12 +103,6 @@ int main()
           pthread_join(thread3, (void **)&conf3);
           pthread_join(thread4, (void **)&conf4);
           pthread_join(thread5, (void **)&conf5);
-
-          check_for_hit(char1);
-          check_for_hit(char2);
-          check_for_hit(char3);
-          check_for_hit(char4);
-          check_for_hit(char5);
 
           printf("%c,%c,%c,%c,%c", char1->status, char2->status, char3->status, char4->status, char5->status);
           printf("\n");
