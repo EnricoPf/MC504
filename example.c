@@ -4,7 +4,7 @@
 #include <pthread.h>
 
 const char *answer = "poema";
-char *tried = "poema";
+//char *tried = "poema";
 
 typedef struct
 {
