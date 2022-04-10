@@ -79,6 +79,7 @@ int main()
 
      while (mode == 't')
      {
+          //verifica se o jogador nao excedeu as tentativas permitidas
           if ((8 - *attempts) == 0)
           {
                mode = 'f';
@@ -88,7 +89,7 @@ int main()
           printf("\n");
           printf("Tentativa %d. Você possui %d tentativas restantes:\n", *attempts, (8 - *attempts));
           scanf("%s", tried);
-
+          //separa a variavel tried para cada char_block para que cada thread receba a sua respectiva letra
           char1->tried = tried[0];
           char2->tried = tried[1];
           char3->tried = tried[2];
