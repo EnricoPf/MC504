@@ -104,6 +104,40 @@ int main()
           pthread_join(thread4, (void **)&conf4);
           pthread_join(thread5, (void **)&conf5);
 
+          //================================================================================================
+          //corrigido -- agora quando uma letra é correta, outras ocorrencias dela não exibem como 'A' (exce
+          //to quando realmente há outra ocorrência da letra na palavra)
+
+          char_block** vector = malloc(5*sizeof(char_block*));
+          vector[0] = char1;
+          vector[1] = char2;
+          vector[2] = char3;
+          vector[3] = char4;
+          vector[4] = char5;
+
+          for(int i = 0; i < 5; i++){
+
+               if (vector[i]->status == 'C'){
+
+                    answer_pos[i] = '@';
+               }
+          }
+
+          for(int i = 0; i < 5; i++){
+
+               if (strchr(answer_pos, vector[i]->tried) == NULL && vector[i]->status == 'A'){
+
+                    vector[i]->status = 'W';
+               }
+          }
+
+          for(int i = 0; i < 5; i++){
+
+               answer_pos[i] = answer[i];
+          }
+
+          //================================================================================================
+
           printf("%c,%c,%c,%c,%c", char1->status, char2->status, char3->status, char4->status, char5->status);
           printf("\n");
           *attempts += 1;
