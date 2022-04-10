@@ -2,10 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
-
+//variavel que guarda a resposta final
 const char *answer = "poema";
+//variavel que guarda uma copia da resposta, mas depois que certa letra é acertada,
+//ela é removida de answer_pos para evitar que o programa mostre que a letra continua na palavra mas em outra posição depois que ja foi acertada
 char answer_pos [] = "poema";
 
+//struct usado para que cada thread individual possa lidar com seu char especifico da palavra
 typedef struct
 {
      char id;
@@ -15,6 +18,8 @@ typedef struct
 
 } char_block;
 
+//função executada por cada thread
+//retorna um de 3 status, C para correto, A para a letra certa com possição errada e W para errado
 void *function1(void *entry)
 {
 
@@ -65,6 +70,7 @@ int main()
      *attempts = 1;
 
      printf("A palavra tem 5 letras\n");
+     //5 variaveis que recebem os resultados da thread para verificar se a palavra está correta
      int conf1 = malloc(sizeof(int));
      int conf2 = malloc(sizeof(int));
      int conf3 = malloc(sizeof(int));
