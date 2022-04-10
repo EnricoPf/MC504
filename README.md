@@ -16,7 +16,7 @@ Repositório para a disciplina de MC504 - Sistemas Operacionais lecionada por Is
 >
 >*attempts = 1;
 
-- 
+- Foi conveniente, mas não essencial, colocar as variáveis char com a keyword register, para que o compilador salvasse tais variáveis no registro, que é mais rápido de acessar, já que essas variáveis são acessadas diversas vezes ao decorrer do programa.
 
 
      
