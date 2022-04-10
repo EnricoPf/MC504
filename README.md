@@ -7,6 +7,9 @@ Repositório para a disciplina de MC504 - Sistemas Operacionais lecionada por Is
 - José Augusto Nascimento Afonso Marcos **RA:** 200025
 
 ## Documentação
+- O nosso objetivo inicial era emular um jogo parecido com o Letreco, no entanto, devido ao requerimento de usar multiplas threads, algumas medidas não optimizadas foram tomadas.
+- Uma delas é o código utilizado das linhas 118 a 146:
+  - O código se faz necessário para que não haja o caso de uma letra já estar na palavra, se ela for digitada novamente em outra posição, não apareça para o jogador que haja multiplas da mesma letra.
 - Quando lidando com muitas threads e em C, é necessário tomar cuidado com a alocação de memória para as variáveis, como por exemplo, a variavél attempts, que se alocada implicitamente com:
 >attemps = 0
 
@@ -17,7 +20,3 @@ Repositório para a disciplina de MC504 - Sistemas Operacionais lecionada por Is
 >*attempts = 1;
 
 - Foi conveniente, mas não essencial, colocar as variáveis char com a keyword register, para que o compilador salvasse tais variáveis no registro, que é mais rápido de acessar, já que essas variáveis são acessadas diversas vezes ao decorrer do programa.
-
-
-     
-     
