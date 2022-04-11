@@ -2,19 +2,24 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
-
+//variavel que guarda a resposta final
 const char *answer = "poema";
-char *tried = "poema";
+//variavel que guarda uma copia da resposta, mas depois que certa letra é acertada,
+//ela é removida de answer_pos para evitar que o programa mostre que a letra continua na palavra mas em outra posição depois que ja foi acertada
+char answer_pos [] = "poema";
 
+//struct usado para que cada thread individual possa lidar com seu char especifico da palavra
 typedef struct
 {
-
+     char id;
      char answer;
      char tried;
      char status;
 
 } char_block;
 
+//função executada por cada thread
+//retorna um de 3 status, C para correto, A para a letra certa com possição errada e W para errado
 void *function1(void *entry)
 {
 
@@ -26,7 +31,7 @@ void *function1(void *entry)
           char_->status = 'C';
           return (void *)1;
      }
-     else if (strchr(answer, char_->tried) != NULL)
+     else if (strchr(answer_pos, char_->tried) != NULL)
      {
           char_->status = 'A';
      }
@@ -48,18 +53,24 @@ int main()
      register char_block *char5 = malloc(sizeof(char_block));
 
      char1->answer = answer[0];
+     char1->id = 0;
      char2->answer = answer[1];
+     char2->id = 1;
      char3->answer = answer[2];
+     char3->id = 2;
      char4->answer = answer[3];
+     char4->id = 3;
      char5->answer = answer[4];
+     char5->id = 4;
 
      printf("Aperte T para começar:\n");
      char mode;
      scanf("%c", &mode);
-     int* attempts = malloc(sizeof(int*));
+     int *attempts = malloc(sizeof(int *));
      *attempts = 1;
 
      printf("A palavra tem 5 letras\n");
+     //5 variaveis que recebem os resultados da thread para verificar se a palavra está correta
      int conf1 = malloc(sizeof(int));
      int conf2 = malloc(sizeof(int));
      int conf3 = malloc(sizeof(int));
@@ -68,14 +79,17 @@ int main()
 
      while (mode == 't')
      {
-          if ((8-*attempts) == 0){
+          //verifica se o jogador nao excedeu as tentativas permitidas
+          if ((8 - *attempts) == 0)
+          {
                mode = 'f';
+               break;
           }
           char tried[5];
           printf("\n");
           printf("Tentativa %d. Você possui %d tentativas restantes:\n", *attempts, (8 - *attempts));
           scanf("%s", tried);
-
+          //separa a variavel tried para cada char_block para que cada thread receba a sua respectiva letra
           char1->tried = tried[0];
           char2->tried = tried[1];
           char3->tried = tried[2];
@@ -97,6 +111,40 @@ int main()
           pthread_join(thread4, (void **)&conf4);
           pthread_join(thread5, (void **)&conf5);
 
+          //================================================================================================
+          //corrigido -- agora quando uma letra é correta, outras ocorrencias dela não exibem como 'A' (exce
+          //to quando realmente há outra ocorrência da letra na palavra)
+
+          char_block** vector = malloc(5*sizeof(char_block*));
+          vector[0] = char1;
+          vector[1] = char2;
+          vector[2] = char3;
+          vector[3] = char4;
+          vector[4] = char5;
+
+          for(int i = 0; i < 5; i++){
+
+               if (vector[i]->status == 'C'){
+
+                    answer_pos[i] = '@';
+               }
+          }
+
+          for(int i = 0; i < 5; i++){
+
+               if (strchr(answer_pos, vector[i]->tried) == NULL && vector[i]->status == 'A'){
+
+                    vector[i]->status = 'W';
+               }
+          }
+
+          for(int i = 0; i < 5; i++){
+
+               answer_pos[i] = answer[i];
+          }
+
+          //================================================================================================
+
           printf("%c,%c,%c,%c,%c", char1->status, char2->status, char3->status, char4->status, char5->status);
           printf("\n");
           *attempts += 1;
@@ -106,9 +154,12 @@ int main()
                break;
           }
      }
-     if (mode == 'v'){
+     if (mode == 'v')
+     {
           printf("Acertou!\n");
-     }else if (mode == 'f'){
+     }
+     else if (mode == 'f')
+     {
           printf("Suas tentativas expiraram.\n");
      }
      printf("=====\n FIM \n");
