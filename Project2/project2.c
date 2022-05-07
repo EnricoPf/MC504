@@ -12,8 +12,8 @@
 //N define o númnero de selvagens, sempre há apenas 1 chefe
 #define S 3
 //M é o número de refeições que o pote central consegue conter
-#define R 8
-#define MAX_CYCLES 10
+#define R 4
+#define MAX_CYCLES 3
 
 
 sem_t sem_pote_cheio;
@@ -40,15 +40,18 @@ void* savage(void *numero_selvagem){
 
     while (1){
         if (ciclos <= 0){
-            return;
+            break;
         }
+        printf("Selvagem %d se levanta!\n", num);
         sem_wait(&sem_mutex);
-            if (pote == 0){
-                sem_post(&sem_pote_vazio);
-                sem_wait(&sem_pote_cheio);
-            }
+        if (pote == 0){
+            printf("Selvagem %d vai acordar o chef!\n", num);
+            sem_post(&sem_pote_vazio);
+            sem_wait(&sem_pote_cheio);
+        }
+        printf("Selvagem %d come!\n", num);
+        printf("Selvagem %d se deita!\n", num);
         pote -= pote;
-        printf("Selvagem %d comeu!", &num);
         sem_post(&sem_mutex);
     }
     return;
@@ -60,41 +63,51 @@ void* chef(void* aux){
     // botacomida(M)
 
     while (1){
-        if (ciclos <= 0){
-            return;
-        }
         sem_wait(&sem_pote_vazio);
+        printf("Chef encheu o pote!\n");
         pote = R;
         ciclos -= 1;
         sem_post(&sem_pote_cheio);
     }
+    return;
 }
 
 int main() {
 
     //declaracao das threads
+    
     pthread_t thr[S], thread_chef;
     int sav_id[S];
     
-    sem_init(&sem_pote_cheio, 0, 0);
+    sem_init(&sem_pote_cheio, 0, 1);
     sem_init(&sem_pote_vazio, 0, 0);
-    sem_init(&sem_mutex, 0, 0);
-
+    sem_init(&sem_mutex, 0, S+2);
     //inicializamos os selvagens
+
+    
     pthread_create(&thread_chef, NULL, chef, (void*) &pote);
+
     for  (int i = 0; i < S; i++){
         sav_id[i] = i;
         pthread_create(&thr[i], NULL, savage, ((void*) &sav_id[i]));
     }
 
-    
-
+    pthread_join(thr[0],NULL);
+    pthread_join(thr[1],NULL);
+    pthread_join(thr[2],NULL);
+    pthread_join(thread_chef,NULL);
+    /*
     for (int i = 0; i < S; i++){
-        pthread_join(thr[i],NULL);
+        if (pthread_join(thr[i],NULL) == 0){
+            printf("OK");
+        }
+        else{
+            printf("Error");
+        }
     }    
-
+    */
     sem_destroy(&sem_pote_cheio);
     sem_destroy(&sem_pote_vazio);
     sem_destroy(&sem_mutex);
-    return;
+    return 0;
 }
