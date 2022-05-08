@@ -48,18 +48,25 @@ void* savage(void *numero_selvagem){
         }
         printf("Selvagem %d se levanta!\n", num);
 
+        sleep(2);
+
         printf("Selvagem %d se aproxima do pote!\n", num);
+
+        sleep(2);
         
         pthread_mutex_lock(&mutex);
 
         if (pote <= 0){
             printf("Não há mais comida! Selvagem %d vai acordar o chef!\n", num);
+            sleep(1);
             sem_post(&sem_pote_vazio);
             sem_wait(&sem_pote_cheio);
         }
 
         printf("Selvagem %d come!\n", num);
+        sleep(3);
         printf("Selvagem %d se deita!\n", num);
+        sleep(num+1);
         pote -= 1;
 
         pthread_mutex_unlock(&mutex);
@@ -79,7 +86,10 @@ void* chef(void* aux){
             return NULL;
         }
         sem_wait(&sem_pote_vazio);
-        printf("Chef encheu o pote!\n");
+        printf("Chef acorda!\n");
+        sleep(2);
+        printf("Chef cozinhou e encheu o pote!\n");
+        sleep(1);
         pote = R;
         ciclos -= 1;
         sem_post(&sem_pote_cheio);
