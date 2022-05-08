@@ -49,7 +49,7 @@ int ciclos = MAX_CYCLES;
                 ALDEIA 
  ______________________________________
 /                                      \
-| eat  eat  eat      pic     wup   !!! |     status - wai / eat / wup / pic / zzz / !!! / coo                
+| eat  eat  eat      pic     wup   !!! |     status - wai / eat / wup / pic / zzz / !!! / fil               
 |  0    1    2        1       1     3  |     
 | M00  M01  M02       P       W     C  | 
 \______________________________________/
