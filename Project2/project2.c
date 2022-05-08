@@ -17,42 +17,40 @@
 #define MAX_CYCLES 3
 
 /*
-mapa dos status:
+mapa dos status na animação:
 
-selvagens: 0 - esperando
-           1 - comendo
-           2 - pegando
-           3 - acordando
-           4 - cheio
+selvagens: 0 - esperando (wai)
+           1 - comendo (eat)
+           2 - pegando (pic)
+           3 - acordando o chef (wup)
+           4 - cheio (zzz)
 
-cozinheiro: 0 - dormindo
-            1 - acorda
-            2 - enche
+cozinheiro: 0 - dormindo (zzz)
+            1 - acorda (!!!)
+            2 - enche (fil)
 
 */
+
 
 int status_selvagens[S];
 int status_cozinheiro = 0;
 
+sem_t sem_pote_cheio; //semaforo para avisar aos selvagens que o pote está cheio
+sem_t sem_pote_vazio; //semaforo para avisar o chef que o pote esta vazio
 
-
-sem_t sem_pote_cheio;
-sem_t sem_pote_vazio;
-
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; //mutex
 
 int pote = R;
 int ciclos = MAX_CYCLES;
 
 /*
-
                 ALDEIA 
  ______________________________________
-/                                      \
-| eat  eat  eat      pic     wup   !!! |     status - wai / eat / wup / pic / zzz / !!! / fil               
+|                                      |
+| eat  eat  eat      pic     wup   !!! |              
 |  0    1    2        1       1     3  |     
 | M00  M01  M02       P       W     C  | 
-\______________________________________/
+|______________________________________|
 QUANTIDADE POTE: X
 
 */
@@ -213,7 +211,7 @@ void* savage(void *numero_selvagem){
 
         sleep(random()%3);
 
-        if (ciclos <= 0){
+        if (ciclos <= 0 && pote <= 0){
             status_selvagens[num] = 4;
             return NULL;
         }
@@ -280,6 +278,8 @@ int main() {
     pthread_t thr[S], thread_chef;
     int sav_id[S];
 
+    //selvagens começam esperando e o pote
+
     for(int i = 0; i < S; i++){
         status_selvagens[i] = 0;
     }
@@ -307,6 +307,8 @@ int main() {
     }
 
     imprimirAldeia();
+
+    //destroy
 
     sem_destroy(&sem_pote_cheio);
     sem_destroy(&sem_pote_vazio);
