@@ -16,6 +16,25 @@
 //MAX_CYCLES define o número máximo de vezes que o chef prepara refeições
 #define MAX_CYCLES 3
 
+/*
+mapa dos status:
+
+selvagens: 0 - esperando
+           1 - comendo
+           2 - pegando
+           3 - acordando
+           4 - cheio
+
+cozinheiro: 0 - dormindo
+            1 - acorda
+            2 - enche
+
+*/
+
+int status_selvagens[S];
+int status_cozinheiro = 0;
+
+
 
 sem_t sem_pote_cheio;
 sem_t sem_pote_vazio;
@@ -26,11 +45,160 @@ int pote = R;
 int ciclos = MAX_CYCLES;
 
 /*
-mutex . wait ()
-2 # critical section
-3 count = count + 1
-4 mutex . signal ()
+
+                ALDEIA 
+ ______________________________________
+/                                      \
+| eat  eat  eat      pic     wup   !!! |     status - wai / eat / wup / pic / zzz / !!! / coo                
+|  0    1    2        1       1     3  |     
+| M00  M01  M02       P       W     C  | 
+\______________________________________/
+QUANTIDADE POTE: X
+
 */
+
+void imprimirAldeia(){
+
+    //top print
+    printf("                ALDEIA\n");
+    printf(" ______________________________________\n");
+    printf("|                                      |\n");
+
+    //mid print - selvagens
+
+    printf("|");
+
+    for(int i = 0; i < S; i++){ //status de quem está nas mesas
+
+        if (status_selvagens[i] == 0){
+            printf(" wai ");
+        }
+        else if (status_selvagens[i] == 1){
+            printf(" eat ");
+        }
+        else if (status_selvagens[i] == 4){
+            printf(" zzz ");
+        }
+        else{
+            printf("     ");
+        }
+    }
+    printf("    ");
+
+    int is_pote = 0;
+
+    for(int i = 0; i < S; i++){ //status de quem está pegando comida no pote
+
+        if (status_selvagens[i] == 2){
+            printf(" pic ");
+            is_pote = 0;
+            break;
+        }
+        else{
+            is_pote = 1;
+        }
+    }
+    if (is_pote == 1){
+        printf("     ");
+        is_pote = 0;
+    }
+
+    printf("   ");
+
+    for(int i = 0; i < S; i++){ //status de alguem que esta acordando o cozinheiro
+
+        if (status_selvagens[i] == 3){
+            printf(" wup ");
+            is_pote = 0;
+            break;
+        }
+        else{
+            is_pote = 1;
+        }
+    }
+    if (is_pote == 1){
+        printf("     ");
+        is_pote = 0;
+    }
+    printf(" ");
+
+    //mid print - cozinheiro
+
+    if (status_cozinheiro == 0){
+        printf(" zzz ");
+    }
+    else if (status_cozinheiro == 1){
+        printf(" !!! ");
+    }
+    else{
+        printf(" fil ");
+    }
+
+    printf("|\n");
+
+    //mid print - selvagens
+
+    printf("|");
+    for(int i = 0; i < S; i++){ //quem esta nas mesas
+        
+        if (status_selvagens[i] == 0 || status_selvagens[i] == 1 || status_selvagens[i] == 4){
+            printf("  %d  ", i);
+        }
+        else{
+            printf("     ");
+        }
+    }
+    printf("     ");
+
+    for(int i = 0; i < S; i++){
+
+        if (status_selvagens[i] == 2){ //quem esta enchendo
+            printf(" %d   ", i);
+            is_pote = 0;
+            break;
+        }
+        else{
+            is_pote = 1;
+        }
+    }
+    if (is_pote == 1){
+        printf("     ");
+        is_pote = 0;
+    }
+
+    printf("    ");
+
+    for(int i = 0; i < S; i++){ //quem esta acordando
+
+        if (status_selvagens[i] == 3){
+            printf("%d    ", i);
+            is_pote = 0;
+            break;
+        }
+        else{
+            is_pote = 1;
+        }
+    }
+    if (is_pote == 1){
+        printf("     ");
+        is_pote = 0;
+    }
+    printf(" 3  |\n");
+
+
+    //bottom print
+
+    printf("| M00  M01  M02       P       W     C  |\n");
+    printf("|______________________________________|\n");
+    printf("\n");
+    printf("QUANTIDADE POTE: %d", pote);
+    printf("\n");
+    printf("\n");
+    printf("\n");
+
+}
+
+
 
 
 void* savage(void *numero_selvagem){
@@ -43,32 +211,34 @@ void* savage(void *numero_selvagem){
 
     while (1){
 
+        sleep(random()%3);
+
         if (ciclos <= 0){
+            status_selvagens[num] = 4;
             return NULL;
         }
-        printf("Selvagem %d se levanta!\n", num);
-
-        sleep(2);
-
-        printf("Selvagem %d se aproxima do pote!\n", num);
-
-        sleep(2);
         
         pthread_mutex_lock(&mutex);
 
+        status_selvagens[num] = 2;
+
+        imprimirAldeia();
+
         if (pote <= 0){
-            printf("Não há mais comida! Selvagem %d vai acordar o chef!\n", num);
-            sleep(1);
+            status_selvagens[num] = 3;
+            imprimirAldeia();
+
             sem_post(&sem_pote_vazio);
             sem_wait(&sem_pote_cheio);
+            status_selvagens[num] = 2;
+            imprimirAldeia();
         }
-
-        printf("Selvagem %d come!\n", num);
-        sleep(3);
-        printf("Selvagem %d se deita!\n", num);
-        sleep(num+1);
         pote -= 1;
+        status_selvagens[num] = 1;
+        imprimirAldeia();
 
+        status_selvagens[num] = 0;
+        imprimirAldeia();
         pthread_mutex_unlock(&mutex);
     }
 }
@@ -81,16 +251,23 @@ void* chef(void* aux){
     while (1){
 
         if (ciclos <= 0){
-
+            status_cozinheiro = 0;
+            imprimirAldeia();
             pthread_mutex_unlock(&mutex);
             return NULL;
         }
         sem_wait(&sem_pote_vazio);
-        printf("Chef acorda!\n");
-        sleep(2);
-        printf("Chef cozinhou e encheu o pote!\n");
-        sleep(1);
+
+        sleep(random()%3);
+        status_cozinheiro = 1;
+        imprimirAldeia();
+
+        status_cozinheiro = 2;
         pote = R;
+        imprimirAldeia();
+
+        status_cozinheiro = 0;
+        imprimirAldeia();
         ciclos -= 1;
         sem_post(&sem_pote_cheio);
     }
@@ -102,6 +279,12 @@ int main() {
     
     pthread_t thr[S], thread_chef;
     int sav_id[S];
+
+    for(int i = 0; i < S; i++){
+        status_selvagens[i] = 0;
+    }
+
+    imprimirAldeia();
     
     sem_init(&sem_pote_cheio, 0, 0);
     sem_init(&sem_pote_vazio, 0, 0);
@@ -121,7 +304,9 @@ int main() {
     for (int i = 0; i < S; i++){
 
         pthread_join(thr[i],NULL);
-    }    
+    }
+
+    imprimirAldeia();
 
     sem_destroy(&sem_pote_cheio);
     sem_destroy(&sem_pote_vazio);
