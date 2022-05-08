@@ -106,21 +106,13 @@ int main() {
         pthread_create(&thr[i], NULL, savage, ((void*) &sav_id[i]));
     }
 
-    pthread_join(thr[0],NULL);
-    pthread_join(thr[1],NULL);
-    pthread_join(thr[2],NULL);
     pthread_join(thread_chef,NULL);
 
-    /*
     for (int i = 0; i < S; i++){
-        if (pthread_join(thr[i],NULL) == 0){
-            printf("OK");
-        }
-        else{
-            printf("Error");
-        }
+
+        pthread_join(thr[i],NULL);
     }    
-    */
+
     sem_destroy(&sem_pote_cheio);
     sem_destroy(&sem_pote_vazio);
     return 0;
