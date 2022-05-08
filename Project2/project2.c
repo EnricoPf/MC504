@@ -9,16 +9,19 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-//N define o númnero de selvagens, sempre há apenas 1 chefe
+//S define o númnero de selvagens, sempre há apenas 1 chefe
 #define S 3
-//M é o número de refeições que o pote central consegue conter
-#define R 4
+//R é o número de refeições que o pote central consegue conter
+#define R 6
+//MAX_CYCLES define o número máximo de vezes que o chef prepara refeições
 #define MAX_CYCLES 3
 
 
 sem_t sem_pote_cheio;
 sem_t sem_pote_vazio;
-sem_t sem_mutex;
+
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
 int pote = R;
 int ciclos = MAX_CYCLES;
 
@@ -39,22 +42,28 @@ void* savage(void *numero_selvagem){
     int num = *(int*)numero_selvagem;
 
     while (1){
+
         if (ciclos <= 0){
-            break;
+            return NULL;
         }
         printf("Selvagem %d se levanta!\n", num);
-        sem_wait(&sem_mutex);
-        if (pote == 0){
-            printf("Selvagem %d vai acordar o chef!\n", num);
+
+        printf("Selvagem %d se aproxima do pote!\n", num);
+        
+        pthread_mutex_lock(&mutex);
+
+        if (pote <= 0){
+            printf("Não há mais comida! Selvagem %d vai acordar o chef!\n", num);
             sem_post(&sem_pote_vazio);
             sem_wait(&sem_pote_cheio);
         }
+
         printf("Selvagem %d come!\n", num);
         printf("Selvagem %d se deita!\n", num);
-        pote -= pote;
-        sem_post(&sem_mutex);
+        pote -= 1;
+
+        pthread_mutex_unlock(&mutex);
     }
-    return;
 }
 
 void* chef(void* aux){
@@ -63,13 +72,18 @@ void* chef(void* aux){
     // botacomida(M)
 
     while (1){
+
+        if (ciclos <= 0){
+
+            pthread_mutex_unlock(&mutex);
+            return NULL;
+        }
         sem_wait(&sem_pote_vazio);
         printf("Chef encheu o pote!\n");
         pote = R;
         ciclos -= 1;
         sem_post(&sem_pote_cheio);
     }
-    return;
 }
 
 int main() {
@@ -79,9 +93,9 @@ int main() {
     pthread_t thr[S], thread_chef;
     int sav_id[S];
     
-    sem_init(&sem_pote_cheio, 0, 1);
+    sem_init(&sem_pote_cheio, 0, 0);
     sem_init(&sem_pote_vazio, 0, 0);
-    sem_init(&sem_mutex, 0, S+2);
+    
     //inicializamos os selvagens
 
     
@@ -96,6 +110,7 @@ int main() {
     pthread_join(thr[1],NULL);
     pthread_join(thr[2],NULL);
     pthread_join(thread_chef,NULL);
+
     /*
     for (int i = 0; i < S; i++){
         if (pthread_join(thr[i],NULL) == 0){
@@ -108,6 +123,5 @@ int main() {
     */
     sem_destroy(&sem_pote_cheio);
     sem_destroy(&sem_pote_vazio);
-    sem_destroy(&sem_mutex);
     return 0;
 }
