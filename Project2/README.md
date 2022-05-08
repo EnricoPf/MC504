@@ -1,4 +1,4 @@
-## Dcomentação
+## Documentação
 
 O objetivo desse projeto era a implementação de uma aplicação multithread utilizando sincronização via semáforos e uma animação para a visualização do progresso da aplicação em tempo real
 
